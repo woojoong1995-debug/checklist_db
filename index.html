@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>불출 체크리스트</title>
+<style>
+  /* ===== 색상/기본 설정 ===== */
+  :root {
+    --bg: #F2F4F6;        /* 전체 배경 */
+    --card: #FFFFFF;      /* 카드 배경 */
+    --ink: #1A2530;       /* 기본 글자색 */
+    --sub: #6B7A88;       /* 보조 글자색 */
+    --line: #DDE3E8;      /* 구분선 */
+    --accent: #FFC400;    /* 포인트 (안전 노랑) */
+    --steel: #3E5C76;     /* 스틸 블루 */
+    --done: #2E8B57;      /* 완료 초록 */
+    --danger: #C0392B;    /* 삭제 빨강 */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+                 "Malgun Gothic", "맑은 고딕", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 12px;
+  }
+
+  .wrap { max-width: 640px; margin: 0 auto; }
+
+  /* ===== 헤더 ===== */
+  header {
+    background: var(--ink);
+    color: #fff;
+    border-radius: 14px 14px 0 0;
+    padding: 16px 18px 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 7px;
+    background: repeating-linear-gradient(-45deg,
+      var(--accent) 0 12px, var(--ink) 12px 24px);
+  }
+  header h1 { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
+  header .date { font-size: 12px; color: #B8C4CE; margin-top: 3px; }
+
+  /* ===== 탭 (호기/장소) ===== */
+  .tabs {
+    display: flex;
+    background: var(--card);
+    border-bottom: 2px solid var(--line);
+    overflow-x: auto;
+  }
+  .tabs button {
+    flex: 1;
+    min-width: 64px;
+    padding: 12px 8px;
+    border: none;
+    background: none;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    color: var(--sub);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+  }
+  .tabs button.active {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+    background: #FFFBEB;
+  }
+  .tabs button .badge {
+    display: inline-block;
+    min-width: 18px;
+    padding: 1px 5px;
+    margin-left: 4px;
+    border-radius: 9px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 11px;
+  }
+
+  /* ===== 입력 폼 ===== */
+  .form {
+    background: var(--card);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .form input, .form select {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 10px;
+    font-size: 15px;
+    font-family: inherit;
+    width: 100%;
+    background: #fff;
+    color: var(--ink);
+  }
+  .form input:focus, .form select:focus {
+    outline: 2px solid var(--accent);
+    border-color: transparent;
+  }
+  .form label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--sub);
+    margin-bottom: 3px;
+  }
+  .fld { flex: 1; }
+  .fld.small { flex: 0 0 92px; }
+
+  /* 원단 규격 입력 영역 (롤수 선택 시에만 표시) */
+  #rollFields {
+    display: none;
+    background: #FFFBEB;
+    border: 1px dashed var(--accent);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  #rollFields.show { display: block; }
+  #rollFields .spec-row { display: flex; gap: 6px; align-items: center; }
+  #rollFields .spec-row input { text-align: center; }
+  #rollFields .x { color: var(--sub); font-weight: 700; flex-shrink: 0; }
+  .spec-status {
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+  .spec-status.found { color: var(--done); }
+  .spec-status.new { color: var(--steel); }
+  .kg-preview {
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--steel);
+    text-align: right;
+  }
+  .kg-preview .big { font-size: 18px; color: var(--ink); }
+
+  .btn-add {
+    width: 100%;
+    padding: 13px 0;
+    border: none;
+    border-radius: 10px;
+    background: var(--steel);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .btn-add:active { opacity: 0.85; }
+  .btn-add:disabled { opacity: 0.5; }
+
+  /* ===== 요약 줄 ===== */
+  .summary {
+    background: var(--card);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .summary .left { color: var(--sub); }
+  .summary .right { color: var(--steel); }
+
+  /* ===== 품목 리스트 ===== */
+  ul.items { list-style: none; background: var(--card); }
+  li.item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  li.item .chk {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    border: 2px solid var(--line);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  li.item.checked .chk {
+    background: var(--done);
+    border-color: var(--done);
+    color: #fff;
+  }
+  li.item .info { flex: 1; cursor: pointer; min-width: 0; }
+  li.item .top-line { display: flex; align-items: baseline; gap: 8px; }
+  li.item .code {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    word-break: break-all;
+  }
+  li.item .time { font-size: 12px; color: var(--sub); flex-shrink: 0; }
+  li.item .qty {
+    font-size: 13px;
+    color: var(--steel);
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  li.item .qty .kg { color: var(--ink); }
+  li.item.checked .code,
+  li.item.checked .qty {
+    color: var(--sub);
+    text-decoration: line-through;
+  }
+  li.item .del {
+    flex-shrink: 0;
+    width: 30px; height: 30px;
+    border: none;
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--danger);
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .empty {
+    background: var(--card);
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--sub);
+    font-size: 14px;
+  }
+
+  /* ===== 하단 버튼 ===== */
+  .actions {
+    background: var(--card);
+    border-radius: 0 0 14px 14px;
+    padding: 14px 16px;
+  }
+  .btn-clear {
+    width: 100%;
+    padding: 12px 0;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--sub);
+    margin-top: 12px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>📦 불출 체크리스트</h1>
+    <div class="date" id="todayDate"></div>
+  </header>
+
+  <!-- 호기/장소 탭 -->
+  <div class="tabs" id="tabBar"></div>
+
+  <!-- 입력 폼 -->
+  <div class="form">
+    <div class="form-row">
+      <div class="fld small">
+        <label>시간</label>
+        <input type="time" id="inTime">
+      </div>
+      <div class="fld">
+        <label>품번</label>
+        <input type="text" id="inCode" placeholder="예: A11W000098" autocapitalize="characters">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="fld small">
+        <label>유형</label>
+        <select id="inType">
+          <option value="ea">개수</option>
+          <option value="roll">롤수(원단)</option>
+          <option value="m">M(미터)</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label id="qtyLabel">수량</label>
+        <input type="number" id="inQty" placeholder="숫자 입력" inputmode="decimal" step="any" min="0">
+      </div>
+      <div class="fld small" id="unitFld">
+        <label>단위</label>
+        <input type="text" id="inUnit" value="ea" list="unitList">
+        <datalist id="unitList">
+          <option value="ea"><option value="plt"><option value="롤"><option value="묶음"><option value="box">
+        </datalist>
+      </div>
+    </div>
+
+    <!-- 원단 규격 (롤수 선택 시에만 표시) -->
+    <div id="rollFields">
+      <label>원단 규격 (평량 × 폭 × 길이)</label>
+      <div class="spec-row">
+        <input type="number" id="specG" placeholder="46" inputmode="decimal" step="any" min="0">
+        <span class="x">×</span>
+        <input type="number" id="specW" placeholder="195" inputmode="decimal" step="any" min="0">
+        <span class="x">×</span>
+        <input type="number" id="specL" placeholder="2400" inputmode="decimal" step="any" min="0">
+      </div>
+      <div class="spec-status" id="specStatus"></div>
+      <div class="kg-preview" id="kgPreview">롤당 — kg</div>
+    </div>
+
+    <button class="btn-add" id="addBtn">➕ 추가</button>
+  </div>
+
+  <!-- 요약 -->
+  <div class="summary">
+    <span class="left" id="sumLeft">0건</span>
+    <span class="right" id="sumRight">완료 0 / 남음 0</span>
+  </div>
+
+  <!-- 품목 리스트 -->
+  <ul class="items" id="itemList"></ul>
+  <div class="empty" id="emptyMsg">아직 등록된 불출 건이 없습니다.<br>위에서 품번과 수량을 입력해 주세요.</div>
+
+  <!-- 하단 -->
+  <div class="actions">
+    <button class="btn-clear" id="clearBtn">🗑 이 탭 목록 전체 비우기</button>
+  </div>
+
+  <p class="hint">
+    체크박스나 품목을 누르면 완료 처리됩니다 · 서버에 저장됨<br>
+    원단(롤수)은 <b>평량×폭×길이 ÷ 1,000,000 × 롤수 = kg</b> 자동 계산
+  </p>
+</div>
+
+<script>
+// ===================================================
+// 불출 체크리스트 - 서버 연결 버전
+// 데이터는 브라우저가 아니라 Flask 서버(DB)에 저장된다
+// ===================================================
+
+// 탭 목록 (필요하면 여기에 추가/수정)
+const TABS = ["1호기", "2호기", "주향", "부업", "진위"];
+
+let activeTab = TABS[0];
+let itemsByTab = {};   // { "1호기": [...], "2호기": [...] } 서버에서 받아온 목록
+TABS.forEach(t => itemsByTab[t] = []);
+
+// 오늘 날짜 (예: 2026-07-11) - 서버에 보낼 때 사용
+const TODAY = (() => {
+  const d = new Date();
+  return d.getFullYear() + "-" +
+         String(d.getMonth() + 1).padStart(2, "0") + "-" +
+         String(d.getDate()).padStart(2, "0");
+})();
+
+// ---------- 서버에서 오늘 목록 전체 불러오기 ----------
+async function loadItems() {
+  try {
+    const res = await fetch("/api/items?date=" + TODAY);
+    const all = await res.json();
+
+    // 탭별로 나누어 담기
+    TABS.forEach(t => itemsByTab[t] = []);
+    all.forEach(item => {
+      if (itemsByTab[item.tab]) itemsByTab[item.tab].push(item);
+    });
+
+    renderTabs();
+    renderItems();
+  } catch (e) {
+    alert("서버 연결 실패. 서버가 켜져 있는지 확인해 주세요.");
+    console.error(e);
+  }
+}
+
+// ---------- kg 계산 (미리보기용, 실제 저장값은 서버가 계산) ----------
+function kgPerRoll(g, w, l) {
+  return (g * w * l) / 1000000;
+}
+
+function fmt(num) {
+  return Math.round(num * 100) / 100;
+}
+
+// ---------- 탭 그리기 ----------
+function renderTabs() {
+  const bar = document.getElementById("tabBar");
+  bar.innerHTML = "";
+  TABS.forEach(name => {
+    const btn = document.createElement("button");
+    btn.className = name === activeTab ? "active" : "";
+
+    // 미체크(남은) 건수 뱃지
+    const remaining = itemsByTab[name].filter(it => !it.checked).length;
+    btn.innerHTML = name + (remaining > 0 ? '<span class="badge">' + remaining + "</span>" : "");
+
+    btn.onclick = () => {
+      activeTab = name;
+      renderTabs();
+      renderItems();
+    };
+    bar.appendChild(btn);
+  });
+}
+
+// ---------- 품목 리스트 그리기 ----------
+function renderItems() {
+  const list = document.getElementById("itemList");
+  const items = itemsByTab[activeTab];
+  list.innerHTML = "";
+
+  document.getElementById("emptyMsg").style.display =
+    items.length === 0 ? "block" : "none";
+
+  items.forEach(item => {
+    const li = document.createElement("li");
+    li.className = "item" + (item.checked ? " checked" : "");
+
+    // 체크박스
+    const chk = document.createElement("div");
+    chk.className = "chk";
+    chk.textContent = "✓";
+    chk.onclick = () => toggleCheck(item.id);
+
+    // 내용
+    const info = document.createElement("div");
+    info.className = "info";
+    info.onclick = () => toggleCheck(item.id);
+
+    const topLine = document.createElement("div");
+    topLine.className = "top-line";
+    const code = document.createElement("span");
+    code.className = "code";
+    code.textContent = item.item_code;
+    const time = document.createElement("span");
+    time.className = "time";
+    time.textContent = item.time || "";
+    topLine.append(code, time);
+
+    const qty = document.createElement("div");
+    qty.className = "qty";
+    qty.innerHTML = qtyText(item);
+
+    info.append(topLine, qty);
+
+    // 삭제 버튼
+    const del = document.createElement("button");
+    del.className = "del";
+    del.textContent = "✕";
+    del.onclick = () => deleteItem(item.id);
+
+    li.append(chk, info, del);
+    list.appendChild(li);
+  });
+
+  updateSummary();
+}
+
+// 수량 표시 문구 만들기
+function qtyText(item) {
+  if (item.qty_type === "roll") {
+    return item.qty + "롤 → <span class='kg'>" + fmt(item.kg) + " kg</span>";
+  }
+  if (item.qty_type === "m") {
+    return item.qty + " M";
+  }
+  return item.qty + " " + (item.unit || "ea");
+}
+
+// ---------- 요약 업데이트 ----------
+function updateSummary() {
+  const items = itemsByTab[activeTab];
+  const done = items.filter(it => it.checked).length;
+  document.getElementById("sumLeft").textContent =
+    activeTab + " · " + items.length + "건";
+  document.getElementById("sumRight").textContent =
+    "완료 " + done + " / 남음 " + (items.length - done);
+}
+
+// ---------- 품목 추가 (서버에 저장) ----------
+async function addItem() {
+  const time = document.getElementById("inTime").value;
+  const code = document.getElementById("inCode").value.trim().toUpperCase();
+  const type = document.getElementById("inType").value;
+  const qty = parseFloat(document.getElementById("inQty").value);
+
+  if (!code) { alert("품번을 입력해 주세요."); return; }
+  if (!qty || qty <= 0) { alert("수량을 입력해 주세요."); return; }
+
+  // 서버에 보낼 데이터 꾸리기
+  const data = {
+    date: TODAY,
+    tab: activeTab,
+    time: time || nowTime(),
+    item_code: code,
+    qty_type: type,
+    qty: qty
+  };
+
+  if (type === "roll") {
+    const g = parseFloat(document.getElementById("specG").value);
+    const w = parseFloat(document.getElementById("specW").value);
+    const l = parseFloat(document.getElementById("specL").value);
+    if (!g || !w || !l) { alert("원단 규격(평량×폭×길이)을 입력해 주세요."); return; }
+    data.gsm = g;
+    data.width = w;
+    data.length = l;
+  } else if (type === "ea") {
+    data.unit = document.getElementById("inUnit").value.trim() || "ea";
+  }
+
+  // 중복 클릭 방지
+  const btn = document.getElementById("addBtn");
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+
+    if (!result.ok) {
+      alert("저장 실패: " + (result.error || "알 수 없는 오류"));
+      return;
+    }
+
+    // 입력칸 초기화 (시간은 현재 시각으로 갱신)
+    document.getElementById("inCode").value = "";
+    document.getElementById("inQty").value = "";
+    document.getElementById("inTime").value = nowTime();
+    document.getElementById("specStatus").textContent = "";
+    updateKgPreview();
+
+    await loadItems();  // 서버에서 최신 목록 다시 받기
+  } catch (e) {
+    alert("서버 연결 실패");
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ---------- 체크 토글 (서버에 저장) ----------
+async function toggleCheck(id) {
+  try {
+    await fetch("/api/items/" + id + "/toggle", { method: "POST" });
+    await loadItems();
+  } catch (e) {
+    alert("서버 연결 실패");
+  }
+}
+
+// ---------- 삭제 ----------
+async function deleteItem(id) {
+  if (!confirm("이 항목을 삭제할까요?")) return;
+  try {
+    await fetch("/api/items/" + id, { method: "DELETE" });
+    await loadItems();
+  } catch (e) {
+    alert("서버 연결 실패");
+  }
+}
+
+// ---------- 탭 전체 비우기 ----------
+async function clearTab() {
+  const items = itemsByTab[activeTab];
+  if (items.length === 0) return;
+  if (!confirm("'" + activeTab + "' 탭의 " + items.length + "건을 모두 삭제할까요?")) return;
+
+  try {
+    await fetch("/api/clear", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: TODAY, tab: activeTab })
+    });
+    await loadItems();
+  } catch (e) {
+    alert("서버 연결 실패");
+  }
+}
+
+// ---------- 현재 시각 (HH:MM) ----------
+function nowTime() {
+  const d = new Date();
+  return String(d.getHours()).padStart(2, "0") + ":" +
+         String(d.getMinutes()).padStart(2, "0");
+}
+
+// ---------- 유형 변경 시 화면 전환 ----------
+function onTypeChange() {
+  const type = document.getElementById("inType").value;
+  document.getElementById("rollFields").classList.toggle("show", type === "roll");
+  document.getElementById("unitFld").style.display = type === "ea" ? "" : "none";
+
+  const label = document.getElementById("qtyLabel");
+  if (type === "roll") label.textContent = "롤수";
+  else if (type === "m") label.textContent = "미터(M)";
+  else label.textContent = "수량";
+
+  // 롤수 모드로 바꿨을 때, 이미 품번이 입력돼 있으면 규격 조회
+  if (type === "roll") lookupSpec();
+
+  updateKgPreview();
+}
+
+// ---------- kg 미리보기 ----------
+function updateKgPreview() {
+  const g = parseFloat(document.getElementById("specG").value);
+  const w = parseFloat(document.getElementById("specW").value);
+  const l = parseFloat(document.getElementById("specL").value);
+  const qty = parseFloat(document.getElementById("inQty").value);
+  const el = document.getElementById("kgPreview");
+
+  if (g && w && l) {
+    const per = kgPerRoll(g, w, l);
+    let text = "롤당 " + fmt(per) + " kg";
+    if (qty > 0) {
+      text += " · <span class='big'>" + qty + "롤 = " + fmt(per * qty) + " kg</span>";
+    }
+    el.innerHTML = text;
+  } else {
+    el.textContent = "롤당 — kg";
+  }
+}
+
+// ---------- 품번 입력 시 서버에서 규격 자동 조회 ----------
+let lookupTimer = null;
+
+function onCodeInput() {
+  // 타자 칠 때마다 서버를 부르면 낭비라서,
+  // 입력이 0.4초 멈추면 그때 한 번만 조회한다 (디바운스)
+  clearTimeout(lookupTimer);
+  lookupTimer = setTimeout(lookupSpec, 400);
+}
+
+async function lookupSpec() {
+  // 롤수 모드가 아니면 조회할 필요 없음
+  if (document.getElementById("inType").value !== "roll") return;
+
+  const code = document.getElementById("inCode").value.trim().toUpperCase();
+  const status = document.getElementById("specStatus");
+  if (!code) { status.textContent = ""; return; }
+
+  try {
+    const res = await fetch("/api/spec/" + encodeURIComponent(code));
+    const result = await res.json();
+
+    if (result.found) {
+      // 등록된 품번 → 규격 자동 채움
+      document.getElementById("specG").value = result.spec.gsm;
+      document.getElementById("specW").value = result.spec.width;
+      document.getElementById("specL").value = result.spec.length;
+      status.textContent = "✓ 등록된 규격을 불러왔습니다 (수정 가능)";
+      status.className = "spec-status found";
+      updateKgPreview();
+    } else {
+      status.textContent = "새 품번입니다. 규격을 입력하면 자동 등록됩니다";
+      status.className = "spec-status new";
+    }
+  } catch (e) {
+    console.error("규격 조회 실패:", e);
+  }
+}
+
+// ---------- 초기화 ----------
+function init() {
+  // 오늘 날짜 표시
+  const today = new Date();
+  const days = ["일", "월", "화", "수", "목", "금", "토"];
+  document.getElementById("todayDate").textContent =
+    today.getFullYear() + "년 " + (today.getMonth() + 1) + "월 " +
+    today.getDate() + "일 (" + days[today.getDay()] + ")";
+
+  document.getElementById("inTime").value = nowTime();
+
+  renderTabs();
+  renderItems();
+  onTypeChange();
+
+  // 이벤트 연결
+  document.getElementById("addBtn").onclick = addItem;
+  document.getElementById("clearBtn").onclick = clearTab;
+  document.getElementById("inType").onchange = onTypeChange;
+  document.getElementById("inCode").addEventListener("input", onCodeInput);
+
+  ["specG", "specW", "specL", "inQty"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateKgPreview);
+  });
+
+  document.getElementById("inQty").addEventListener("keydown", e => {
+    if (e.key === "Enter") addItem();
+  });
+
+  // 서버에서 오늘 데이터 불러오기
+  loadItems();
+}
+
+init();
+</script>
+</body>
+</html>
