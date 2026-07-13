@@ -1,14 +1,14 @@
 # checklist_db.py
 # 불출 체크리스트 전용 DB 관리 파일
-# MWS와 완전히 별개의 DB 파일(checklist.db)을 사용한다
 
 import sqlite3
 import os
 
-# DB 파일 경로: 이 파이썬 파일과 같은 폴더에 만들어지도록 고정
-# (어느 위치에서 실행해도 항상 같은 DB를 쓰게 하기 위함)
+# DB 파일 경로
+# - 환경변수 CHECKLIST_DB가 있으면 그 경로 사용 (Railway Volume용)
+# - 없으면 이 파일과 같은 폴더 (맥북 로컬 개발용)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "checklist.db")
+DB_PATH = os.environ.get("CHECKLIST_DB", os.path.join(BASE_DIR, "checklist.db"))
 
 
 def get_conn():
@@ -53,7 +53,7 @@ def init_db():
 
     conn.commit()
     conn.close()
-    print("DB 초기화 완료: 테이블 준비됨")
+    print("DB 초기화 완료: 테이블 준비됨 →", DB_PATH)
 
 
 # =====================================================
